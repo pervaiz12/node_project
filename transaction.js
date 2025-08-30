@@ -40,6 +40,39 @@ router.post('/', async (req, res) => {
   }
 });
 
+// @route   PUT /:id
+// @desc    Update a transaction
+// @access  Public
+router.put('/:id', async (req, res) => {
+  try {
+    const { description, amount, category, type } = req.body;
+
+    const update = {};
+    if (description !== undefined) update.description = description;
+    if (amount !== undefined) update.amount = amount;
+    if (category !== undefined) update.category = category;
+    if (type !== undefined) update.type = type;
+
+    const transaction = await Transaction.findByIdAndUpdate(
+      req.params.id,
+      { $set: update },
+      { new: true, runValidators: true }
+    );
+
+    if (!transaction) {
+      return res.status(404).json({ msg: 'Transaction not found' });
+    }
+
+    res.json(transaction);
+  } catch (err) {
+    console.error('Error updating transaction:', err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ msg: 'Transaction not found' });
+    }
+    res.status(500).send('Server Error');
+  }
+});
+
 // @route   DELETE /api/transactions/:id
 // @desc    Delete a transaction
 // @access  Public
@@ -51,7 +84,7 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ msg: 'Transaction not found' });
     }
 
-    await transaction.deleteOne(); // ✅ replace remove()
+    await transaction.deleteOne(); 
     res.json({ msg: 'Transaction removed' });
   } catch (err) {
     console.error(err.message);
