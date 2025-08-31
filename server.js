@@ -5,6 +5,8 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const transactionRoutes = require('./transaction');
+const authRoutes = require('./routes/auth');
+const { initSocket } = require('./socket');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -89,6 +91,7 @@ mongoose.connect(MONGODB_URI)
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
 // Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);
 
 // Basic route for testing
@@ -100,6 +103,10 @@ app.get('/', (req, res) => {
 const server = app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+// Init Socket.IO and store on app for route handlers to emit
+const io = initSocket(server);
+app.set('io', io);
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
